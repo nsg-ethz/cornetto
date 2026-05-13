@@ -1,0 +1,35 @@
+# Private evaluation config — requires ground-truth artifacts (not in public dataset).
+#
+# Uses scenario-003 (BGP ASN mismatch, small topology) which is the only scenario
+# in the public dataset that ships with a complete set of artifacts, including
+# initial_configs/ (correct configs), fault_metrics.csv, and route/forwarding diffs.
+#
+# Run with:
+#   cornetto --config-name private_eval model.provider=openai model.model_name=gpt-4o
+
+defaults:
+  - zero_shot      # inherit all base settings
+  - _self_         # overrides below take precedence
+
+data:
+  split_ratio: 1.0
+  scenario_filter:
+    - "scenario-003"
+
+model:
+  context_sampling: "oracle"  # requires initial_configs/ — available in scenario-003
+
+diagnosis_judge:
+  enabled: True
+  max_fault_rows: 8
+  max_diff_lines: 400
+  models:
+    - provider: openai
+      model_name: gpt-4o
+      max_tokens: 10000
+    - provider: google
+      model_name: gemini-2.5-pro
+      max_tokens: 10000
+    - provider: anthropic
+      model_name: claude-opus-4-5-20251101
+      max_tokens: 10000

@@ -1,0 +1,84 @@
+# Data configuration
+data:
+  seed: 42
+  split_ratio: 1.00
+  dataset_name: main_dataset
+  load_path: "${hydra:runtime.cwd}/dataset/${data.dataset_name}"
+  save_path: "${hydra:runtime.cwd}/data"
+
+# Pipeline run mode
+pipeline_mode: "agentic"
+
+# External network environment configuration
+net_env:
+  name: Batfish
+
+# Model configuration
+model:
+  provider: "hf"
+  model_name: "Qwen/Qwen3.5-9B"
+
+  # Common modelling parameters
+  max_tokens: 40000
+  temperature: 0.7
+  top_p: 0.95
+
+  # Model execution modes
+  batch_api: False
+  context_sampling: "random"       # Options: 'oracle', 'random', 'random_with_oracle'
+  max_context_tokens: "full"
+  last_k_messages: 30              # Keep chat history for multi-turn agent
+  few_shot_mode: False
+
+  # HuggingFace-specific (ignored by API providers)
+  use_api: False
+  use_4_bit: False
+  use_8_bit: False
+  use_vllm: True
+  num_gpus: 4
+
+# Agentic-specific configuration
+agentic:
+  max_steps: 30                    # Maximum tool-call steps per scenario
+  verification_mode: "per_step"    # Options: 'per_step', 'post_hoc'
+  context_prefill: True            # True or False for ablation
+
+# LLM-as-judge diagnosis scoring
+diagnosis_judge:
+  enabled: True
+  max_fault_rows: 8
+  max_diff_lines: 400
+  models:
+    - provider: openai
+      model_name: gpt-5.1-2025-11-13
+      max_tokens: 10000
+    - provider: google
+      model_name: gemini-2.5-pro
+      max_tokens: 10000 
+    - provider: anthropic
+      model_name: claude-opus-4-5-20251101
+      max_tokens: 10000
+
+# Feedback mode (unused by agentic pipeline; kept for interface compat)
+feedback:
+  enabled: False
+  max_attempts: 1
+  similarity_threshold: 1.0
+
+# Additional context (unused; agent retrieves its own context via tools)
+additional_context:
+  include_route_diffs: false
+  include_forwarding_diffs: false
+
+# System message (fallback; agent uses its own prompt)
+system_message: >-
+  You are a professional engineer specialising in network configuration and incident management. Strictly follow user instructions and work on the given task to the best of your ability.
+
+# Prompt formatting (for dataset pipeline compatibility)
+prompt_style: "search_replace"
+
+# Hydra configuration
+hydra:
+  run:
+    dir: >-
+      ${hydra:runtime.cwd}/results_main/zero_shot/run-mode-${pipeline_mode}/context-mode-${model.context_sampling}/data-${data.dataset_name}/model-${model.provider}-${model.model_name}/steps-${agentic.max_steps}-verify-${agentic.verification_mode}-ablation-${agentic.context_prefill}

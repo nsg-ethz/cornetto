@@ -1,0 +1,95 @@
+# Data configuration
+data:
+  seed: 42
+  split_ratio: 1.00  # Use 100% of the data for zero-shot evaluation
+  dataset_name: main_dataset
+  load_path: "${hydra:runtime.cwd}/dataset/${data.dataset_name}"
+  save_path: "${hydra:runtime.cwd}/data"
+  scenario_filter: ~   # null — load all scenarios; set to a list to restrict (e.g. ["scenario-003"])
+
+# Pipeline run mode
+pipeline_mode: "naive"    # options: 'naive', 'repair', 'retrieval', or 'agentic'
+
+# Repair mode: load results from a prior naive run (optional)
+# When set, successful tasks from the naive run are skipped and their results preserved
+naive_results_dir: "${hydra:runtime.cwd}/results_main/zero_shot/run-mode-naive/context-mode-${model.context_sampling}-${model.max_context_tokens}/data-${data.dataset_name}/model-${model.provider}-${model.model_name}/edit-mode-${prompt_style}"   # e.g., "results/zero_shot/run-mode-naive/.../model-.../edit-mode-search_replace"
+naive_success_threshold: 1.0   # Score threshold for considering naive results successful
+naive_retry_parse_failures: true  # Retry tasks with parse failures
+naive_retry_errors: true         # Retry tasks with API/other errors
+naive_retry_low_scores: false     # Retry tasks with scores below threshold
+
+# External network environment configuration
+net_env:
+  name: Batfish
+
+# Model configuration
+model:
+  provider: "zai"
+  model_name: "glm-4.7"
+  
+  # Common modeling parameters
+  max_tokens: 40000
+  temperature: 1.0
+  top_p: 0.95
+
+  # Model execution modes 
+  batch_api: False
+  context_sampling: "random"    # options: 'oracle', 'random'
+  max_context_tokens: "full"
+  last_k_messages: 2
+  few_shot_mode: False
+
+  # HuggingFace-specific parameters (ignored by others)
+  use_api: False
+  use_4_bit: False
+  use_8_bit: False
+  use_vllm: True
+  num_gpus: 4
+
+# LLM-as-judge diagnosis scoring
+# Requires fault_metrics.csv (ground-truth, not in public dataset). Disabled by default.
+diagnosis_judge:
+  enabled: False
+  max_fault_rows: 8
+  max_diff_lines: 400
+  models:
+    - provider: openai
+      model_name: gpt-5.1-2025-11-13
+      max_tokens: 10000
+    - provider: google
+      model_name: gemini-2.5-pro
+      max_tokens: 10000 
+    - provider: anthropic
+      model_name: claude-opus-4-5-20251101
+      max_tokens: 10000
+
+# Feedback mode configuration
+feedback:
+  enabled: False
+  max_attempts: 1
+  similarity_threshold: 1.0
+
+# Additional context settings for prompt enrichment
+# These options allow including supplementary network state information in prompts
+additional_context:
+  # Include routing table differences (RIB diffs) in the prompt
+  # Shows which routes were added/removed/changed due to the fault
+  include_route_diffs: false
+  route_diffs_max_tokens: 15000   # Token budget for route diffs section
+  
+  # Include forwarding entry differences (FIB diffs) in the prompt
+  # Shows actual data-plane forwarding path changes
+  include_forwarding_diffs: false
+  forwarding_diffs_max_tokens: 15000   # Token budget for forwarding diffs section
+
+# Prompt configuration
+system_message: "You are a professional engineer specializing on network configuration and incident management. Strictly follow user instructions and work on the given task to the best of your ability. Make sure your output solution exactly satisfies all format requirements instructed by the user."
+
+# Prompt/output formatting
+prompt_style: "search_replace"    # options: 'diff_patch', 'search_replace'
+# parser_name: "search_replace"   # optional override; normally derived from prompt_style
+
+# Hydra configuration
+hydra:
+  run:
+    dir: "${hydra:runtime.cwd}/results_main/zero_shot/run-mode-${pipeline_mode}/context-mode-${model.context_sampling}-${model.max_context_tokens}/data-${data.dataset_name}/model-${model.provider}-${model.model_name}/edit-mode-${prompt_style}"
