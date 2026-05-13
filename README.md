@@ -50,7 +50,7 @@ This stops any existing container named `batfish`, pulls `iprotogeros/batfish-al
 
 ## Dataset
 
-The dataset (231 scenarios) is hosted on HuggingFace as a **public dataset**. It contains everything needed to run the benchmark: faulty router configurations, formal specifications, and network topology. Ground-truth artifacts (correct configurations, fault annotations, route/forwarding diffs) are intentionally excluded to prevent contamination of evaluation results; `scenario-003` is the only exception (see [Dataset format](#dataset-format)).
+The dataset (231 scenarios) is hosted on HuggingFace as a [**public dataset**](https://huggingface.co/datasets/iprotogeros/cornetto-benchmark). It contains everything needed to run the benchmark: faulty router configurations, formal specifications, and network topology. Ground-truth artifacts (correct configurations, fault annotations, route/forwarding diffs) are intentionally excluded to prevent contamination of evaluation results; `scenario-003` is the only exception (see [Dataset format](#dataset-format)).
 
 Download the dataset once after cloning:
 
