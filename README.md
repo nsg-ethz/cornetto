@@ -11,11 +11,12 @@ The benchmark supports four pipeline modes — zero-shot, repair (retry on failu
 ```bash
 git clone https://github.com/iprotogeros/cornetto-repo.git
 cd cornetto-repo
-pip install -e .          # installs the package + all dependencies
 ```
 
-Or install dependencies only:
+And install dependencies and libraries:
 ```bash
+conda create -n net python=3.12
+conda activate net
 pip install -r requirements.txt
 ```
 
